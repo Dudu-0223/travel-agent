@@ -24,7 +24,21 @@
       "repository": {
         "url": "https://github.com/Dudu-0223/travel-agent"
       },
-      "versions": []
+      "versions": [
+        {
+          "version": "0.8.0",
+          "publishTimestamp": 1795601423,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/Dudu-0223/travel-agent",
+            "commit": "aba87bdc3ea8f6d43028c1324ac8bc408e6fc236"
+          },
+          "description": "一键更新：从「插件 → 发现」安装后可直接更新"
+        }
+      ],
+      "dist-tags": {
+        "latest": "0.8.0"
+      }
     }
   ]
 }
