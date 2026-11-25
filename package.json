@@ -1,6 +1,6 @@
 {
   "name": "@local/dsh-travel-agent",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
   "type": "module",
   "description": "Travel agent: a home page of trip folders, one Session each, with a Flights view inside every trip Session",
