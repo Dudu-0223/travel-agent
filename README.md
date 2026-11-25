@@ -21,9 +21,19 @@ DeepSeek Harness 插件：旅行助手，支持 macOS 和 Windows。旅行目录
 - `index.js`：Host 端。`tripsDir` 配置、`flight_*` 工具（只对旅行目录的会话开放）、`find-flights` skill、投影 `flightBoard`（完整方案）和 `flightTrip`（主页卡片摘要）。
 - `client.js`：主页、机票方案视图、左侧栏入口。旅行目录从 Host 配置同步过来，Windows 路径比较时忽略大小写和分隔符差异。
 
-## 安装
+## 安装与更新
 
-插件管理 → 添加插件 → 选择本目录（或让助手用 `plugin_manager install_bundle` 安装这个目录）。修改后在插件管理里重新启用 `travel-agent` 即可重新加载。Windows 上助手用 PowerShell 的 `Start-Process` 打开网页，需要浏览器（Chrome 或 Edge）已经打开。
+推荐从插件索引安装，之后能在 DSH 里一键更新：
+
+1. 打开 **插件 → 发现**，在索引来源里添加 `git+https://github.com/Dudu-0223/travel-agent.git`（仓库是私有的，需要先被加为协作者，并且这台电脑的 git 能访问 GitHub，例如装了 `gh` 并 `gh auth login`）。
+2. 在「发现」里找到旅行助手，点 **安装**。DSH 会按某个发版提交（`git+https://…#<commit>`）安装它。
+3. 有新版本时，「发现」里的卡片显示 **更新**，点一下即可；更新失败会自动装回原来的版本。旅行助手主页右上角的 **检查更新** 会打开插件页。
+
+开发时也可以用 **插件 → 添加插件** 选择本地目录，这种装法不会出现「更新」按钮，改完代码在插件管理里重新启用即可。
+
+## 发版
+
+`node scripts/release.mjs`（默认补丁版本，可传 `minor`、`major` 或具体版本号，`--notes "说明"` 可选）：检查工作区干净且与远端同步，改 `package.json` 版本并提交、打 `v<版本>` 标签，再把这个提交写进 `index.json` 并推送。别人在「发现」里就会看到更新。
 
 ## 已知限制
 

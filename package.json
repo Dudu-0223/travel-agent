@@ -20,7 +20,8 @@
     "icon.svg",
     "README.md",
     "skills/*.md",
-    "workspace/AGENTS.md"
+    "workspace/AGENTS.md",
+    "scripts/*.mjs"
   ],
   "dsh": {
     "bundle": {

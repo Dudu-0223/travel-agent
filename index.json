@@ -1,0 +1,30 @@
+{
+  "format": 1,
+  "title": {
+    "en": "Travel agent",
+    "zh": "旅行助手"
+  },
+  "description": {
+    "en": "Release channel of the travel agent DSH plugin",
+    "zh": "旅行助手 DSH 插件的发布渠道"
+  },
+  "plugins": [
+    {
+      "name": "@local/dsh-travel-agent",
+      "title": {
+        "en": "Travel agent",
+        "zh": "旅行助手"
+      },
+      "description": {
+        "en": "One card per trip: the assistant researches flights on five sites and ranks options by price, leave days and transfers.",
+        "zh": "每次行程一张卡片：助手在五个平台调查机票，按价格、请假天数、转机次数推荐方案。"
+      },
+      "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzNiIgaGVpZ2h0PSIzNiIgdmlld0JveD0iMCAwIDM2IDM2IiBmaWxsPSJub25lIj4KICA8cGF0aCBkPSJNMjcuNSA4LjVjMS0xIDIuNi0xIDMgMCAuNC45LS4xIDIuMS0xIDNsLTMuNiAzLjYgMi40IDEwLjItMiAyLTQuNC03LjgtNCA0IC41IDMuNC0xLjYgMS42LTItNC00LTIgMS42LTEuNiAzLjQuNSA0LTQtNy44LTQuNCAyLTIgMTAuMiAyLjR6IiBmaWxsPSJ1cmwoI2ZsaWdodEJvYXJkSWNvbikiLz4KICA8cmVjdCB4PSI1IiB5PSIyNSIgd2lkdGg9IjgiIGhlaWdodD0iMi41IiByeD0iMS4yNSIgZmlsbD0idXJsKCNmbGlnaHRCb2FyZEljb24pIiBvcGFjaXR5PSIuNTUiLz4KICA8cmVjdCB4PSI1IiB5PSIyOS41IiB3aWR0aD0iMTIiIGhlaWdodD0iMi41IiByeD0iMS4yNSIgZmlsbD0idXJsKCNmbGlnaHRCb2FyZEljb24pIiBvcGFjaXR5PSIuNTUiLz4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZmxpZ2h0Qm9hcmRJY29uIiB4MT0iNSIgeTE9IjgiIHgyPSIzMSIgeTI9IjMyIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+CiAgICAgIDxzdG9wIHN0b3AtY29sb3I9IiM2N0M3RkUiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNEE2NUU4Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KPC9zdmc+Cg==",
+      "author": "Dudu-0223",
+      "repository": {
+        "url": "https://github.com/Dudu-0223/travel-agent"
+      },
+      "versions": []
+    }
+  ]
+}
