@@ -41,10 +41,10 @@
 
 ## 问用户要哪些
 
-录入前用一个 `ask_user_question` 让用户挑：
+录入前用一个 `ask_user_question` 让用户挑（卡片会占住用户的输入框，要短）：
 
-- `multi_select: true`，问题写清是哪个文件夹、共找到几个；
-- 每个选项的 `label` 写「¥价格 · 去程日期→到家日期 · 航司 · 转N次」，`description` 写起降时间、转机地点和时长；
+- `multi_select: true`，`question` 一句话，写清是哪个文件夹、共找到几个；
+- 每个选项的 `label` 写「¥价格 · 去程日期→到家日期 · 航司 · 转N次」，`description` 只写起降时间、转机地点和时长；
 - 用户选中的用 `flight_add_option` 录入，没选的不录。
 
-查完一轮后，`flight_summary` 看最优方案，再用 `ask_user_question` 汇报（最便宜、最省假、最好飞各是哪个）并问下一步。
+录入完用 `flight_summary` 核对，然后结束这一轮，不再弹卡片汇报；推荐方案、请假天数和到家时间页面上都看得到。
