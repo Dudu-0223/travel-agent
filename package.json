@@ -1,6 +1,6 @@
 {
   "name": "@local/dsh-travel-agent",
-  "version": "0.5.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "description": "Travel agent: a home page of trip folders, one Session each, with a Flights view inside every trip Session",
@@ -18,7 +18,9 @@
     "locale/*.json",
     "docs",
     "icon.svg",
-    "README.md"
+    "README.md",
+    "skills/*.md",
+    "workspace/AGENTS.md"
   ],
   "dsh": {
     "bundle": {
@@ -38,5 +40,8 @@
         "@deepseek-ai/dsh-client-ui-layout"
       ]
     }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/schemastery": "*"
   }
 }

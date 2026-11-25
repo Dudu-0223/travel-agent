@@ -1,8 +1,3 @@
----
-name: find-flights
-description: 在 Trip.com、携程、飞猪、Google Flights、Skyscanner 上用浏览器调查机票价格和航班，并把结果录入旅行助手的行程文件夹。查机票、比价、补充报价时使用；只调查，不订票。
----
-
 # 查机票并录入旅行助手
 
 这是调查任务：目标是查清航班、价格和行程信息，供用户比较，不是帮用户订票。
@@ -14,10 +9,9 @@ description: 在 Trip.com、携程、飞猪、Google Flights、Skyscanner 上用
 
 ## 开始之前
 
+- 操作浏览器的具体做法见文末「操作浏览器」一节；不要另开无痕窗口，不要输入用户的账号密码。
 - 先 `flight_summary`，看当前文件夹、已有方案和还没查的平台，不要重复录入。
 - 没有文件夹就先 `flight_set_trip`；没有假期就先查好再 `flight_set_holidays`。
-- 用 computer use 操作用户已经打开的 Chrome，全程在后台，规则见 AGENTS.md「在后台操作浏览器，不打扰用户」：不 activate、不用系统输入、不发 AppleScript 按键、不改浏览器设置。不要另开无痕窗口，也不要输入用户的账号密码。
-- 打开网址用 `open -g -a "Google Chrome" "<网址>"`，再用 `getAccessibilityTree` / `getScreenshot` 读结果；需要点击或输入时先用 `invoke` / `setValue`，不行再用不带 `useSystemInput` 的 `click`。报 `FOREGROUND_REQUIRED` 就记 `blocked`（note「需要前台」）换下一个平台。
 
 ## 各平台怎么查
 

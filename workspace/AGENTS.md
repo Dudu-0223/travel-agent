@@ -17,21 +17,13 @@
 ## 工具
 
 - 机票数据只通过 `flight_*` 工具读写：`flight_set_trip`、`flight_set_holidays`、`flight_log_search`、`flight_add_option`、`flight_add_quote`、`flight_remove_option`、`flight_summary`。
-- 飞行时长、转机时长、请假天数、最优方案都由插件计算。不要自己算，回答前用 `flight_summary` 读结果。
-- 查价用 computer use 操作浏览器（加载 `find-flights` skill，里面有每个平台的做法）。
+- 飞行时长、转机时长、请假天数、推荐方案都由插件计算。不要自己算，回答前用 `flight_summary` 读结果。
+- 查价用 computer use 操作浏览器：先加载 `find-flights` skill，里面有每个平台的做法和当前系统下操作浏览器的规则。
 - 不要读或改这个目录以外的代码，也不要研究插件本身的实现；插件的源码不在这里，和你的任务无关。
 
-## 在后台操作浏览器，不打扰用户
+## 不打扰用户
 
-用户在用电脑时你在查票，所以浏览器始终留在后台：
-
-- **不要**调用 `app.activate()`、`window.show()`，不要传 `useSystemInput: true`，不要用 `osascript`/System Events 发按键，也不要切桌面。
-- **不要**改浏览器或系统设置（例如 Safari 的「允许 Apple 事件中的 JavaScript」、开远程调试端口），不要启动用户没开着的浏览器。
-- 打开网页用 `open -g -a "Google Chrome" "<网址>"`（`-g` 表示不把浏览器切到前台）。各平台都尽量直接拼出带参数的搜索网址，少填表单。
-- 读页面用窗口级的 `getAccessibilityTree` 和 `getScreenshot`，它们不需要前台。
-- 必须交互时，优先用元素操作 `invoke` / `setValue` / `performAction` / `selectText`，其次用不带 `useSystemInput` 的窗口点击 `click`、`scroll`。
-- 某个操作报 `FOREGROUND_REQUIRED`，或在后台点了没反应：不要改用 activate，把这个平台记成 `flight_log_search` 的 `blocked`（note 写「需要前台」），换下一个平台。
-- 所有平台都查完后，如果有平台因为「需要前台」没查成，用 `ask_user_question` 问用户要不要允许把浏览器切到前台补查；用户同意后才可以 activate。
+用户在用电脑时你在查票。只读页面不打断用户；凡是要把浏览器切到前台、占用鼠标键盘的操作，都先用 `ask_user_question` 征得同意。不要改浏览器或系统设置，不要登录。各操作系统上具体怎么做，见 `find-flights` skill 的「操作浏览器」一节。
 
 ## 用户的偏好
 
@@ -49,4 +41,4 @@
 2. `flight_set_trip` 建文件夹（标题如「2027 春节 北京⇄布宜诺斯艾利斯」），`flight_set_holidays` 填假期。
 3. 按 `find-flights` skill 逐个平台查。
 4. 把查到的候选行程整理成一个 `ask_user_question`（`multi_select: true`）问用户要加哪些。只把用户选中的用 `flight_add_option` 录入，其他平台的价格用 `flight_add_quote` 补上。
-5. `flight_summary` 看结果，再用 `ask_user_question` 汇报最优方案并问下一步。
+5. `flight_summary` 看结果，再用 `ask_user_question` 汇报推荐方案并问下一步。

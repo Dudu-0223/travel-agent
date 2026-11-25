@@ -1,26 +1,82 @@
 /**
  * Host half of the travel agent: model-facing tools that record flight research, and the `flightBoard` Session
  * projection that folds those calls from the Session log and serves the derived board to the travel page.
- * The board is derived only from logged tool calls, so fork, resume and replay reproduce it. The tools are offered
- * only to Sessions whose directory is ~/travel, the fixed workspace the travel page creates its Session in.
+ * The board is derived only from logged tool calls, so fork, resume and replay reproduce it. The tools and the
+ * `find-flights` skill are offered only to Sessions in the trips directory (Config `tripsDir`, default `~/travel`),
+ * where the travel page creates its Sessions; the skill's browser section follows the Host platform (macOS or Windows).
  */
 
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import z from '@deepseek-ai/schemastery'
 import { computeBoard, EMPTY, InputError, MUTATING, parseState, reduce, reduceUserMessage, summaryText, TOOL } from './model.js'
 
 export const name = 'travel-agent'
-export const inject = ['tools', 'sessionProjections']
+export const inject = ['tools', 'sessionProjections', 'skills']
+
+/** `~` or a leading `~/` / `~\` names the user's home directory on every platform. */
+const expandHome = value => (/^~(?=$|[\\/])/.test(value) ? join(homedir(), value.slice(1)) : value)
+
+/**
+ * `tripsDir` is volatile so the page receives it: the page lists that Workspace's Sessions and creates new ones there.
+ * The value reaches both faces already expanded to an absolute path.
+ */
+export const Config = z.object({
+  tripsDir: z.transform(z.string(), value => resolve(expandHome(value.trim())))
+    .default('~/travel')
+    .description('旅行助手的工作目录：每个行程是这里的一个会话，助手的 AGENTS.md 也放在这里。支持 ~/ 开头。')
+    .volatile(),
+})
+
+const PACKAGE_DIR = fileURLToPath(new URL('.', import.meta.url))
 
 const PROJECTION_KEY = 'flightBoard'
 
-/** Fixed workspace of the travel page's Session (holds its AGENTS.md and skills); client.js creates its Session here. */
-const TRIPS_DIR = join(homedir(), 'travel')
+/** Comparable form of an absolute path: Windows paths compare without case, as the file system does. */
+const pathKey = path => (process.platform === 'win32' ? resolve(path).toLowerCase() : resolve(path))
 
-/** Whether a Session works in the trips directory. */
-const inTrips = agent => {
-  const cwd = agent.session?.header?.cwd
-  return typeof cwd === 'string' && (cwd === TRIPS_DIR || cwd.startsWith(TRIPS_DIR + '/'))
+/**
+ * Whether a working directory is the trips directory or below it.
+ * @param cwd - Session working directory.
+ * @param dir - absolute trips directory.
+ * @returns whether the Session belongs to the travel agent.
+ */
+const insideTrips = (cwd, dir) => {
+  if (typeof cwd !== 'string' || typeof dir !== 'string') return false
+  const a = pathKey(cwd)
+  const b = pathKey(dir)
+  return a === b || a.startsWith(b.endsWith(sep) ? b : b + sep)
+}
+
+/** Browser-operation section of the skill for this Host platform; other platforms get the Windows-style cautious rules. */
+const BROWSER_SECTION = process.platform === 'darwin' ? 'browser-macos.md' : 'browser-windows.md'
+
+/** The `find-flights` skill: the shared research method plus the browser section for this platform, read at load time. */
+const readSkill = () => [
+  readFileSync(join(PACKAGE_DIR, 'skills', 'find-flights.md'), 'utf8').trimEnd(),
+  readFileSync(join(PACKAGE_DIR, 'skills', BROWSER_SECTION), 'utf8').trimEnd(),
+].join('\n\n') + '\n'
+
+const SKILL_SUMMARY = {
+  name: 'find-flights',
+  description: '在 Trip.com、携程、飞猪、Google Flights、Skyscanner 上用浏览器调查机票价格和航班，并把结果录入旅行助手的行程文件夹。查机票、比价、补充报价时使用；只调查，不订票。',
+  invocation: { modelInvocable: true, userInvocable: true },
+  source: 'travel-agent',
+  provider: 'travel-agent',
+}
+
+/** Create the trips directory and its AGENTS.md from the packaged template when either is missing. */
+function prepareTripsDir(dir, logger) {
+  try {
+    mkdirSync(dir, { recursive: true })
+    const agents = join(dir, 'AGENTS.md')
+    if (!existsSync(agents)) writeFileSync(agents, readFileSync(join(PACKAGE_DIR, 'workspace', 'AGENTS.md')), { flag: 'wx' })
+  } catch (error) {
+    // A missing directory surfaces again when the page creates its Workspace there; the plugin keeps running.
+    logger.warn('travel-agent: cannot prepare %s: %s', dir, error instanceof Error ? error.message : String(error))
+  }
 }
 
 /** Fold one successful call; malformed or stale input leaves the state unchanged. */
@@ -230,10 +286,20 @@ const TOOLS = [
 ]
 
 /**
- * Register the `flightBoard` projection and the flight tools, offered only in the trips directory.
- * @param ctx - plugin context with the tool and Session projection registries.
+ * Prepare the trips directory, then register the projections, the flight tools and the `find-flights` skill, the last
+ * two offered only in the trips directory.
+ * @param ctx - plugin context with the tool, skill and Session projection registries.
+ * @param config - plugin configuration; `tripsDir` is an absolute path.
  */
-export async function apply(ctx) {
+export async function apply(ctx, config) {
+  const tripsDir = () => config.tripsDir.get()
+  prepareTripsDir(tripsDir(), ctx.logger)
+  const inTrips = agent => insideTrips(agent.session?.header?.cwd, tripsDir())
+  ctx.effect(() => ctx.skills.registerProvider(() => ({
+    name: 'travel-agent',
+    list: async ({ cwd }) => (insideTrips(cwd, tripsDir()) ? [{ ...SKILL_SUMMARY, rank: 50, locator: BROWSER_SECTION }] : []),
+    get: async () => ({ ...SKILL_SUMMARY, content: readSkill() }),
+  })), 'travel-agent: find-flights skill')
   const handle = await ctx.sessionProjections.register({
     key: PROJECTION_KEY,
     stateSchema: { parse: parseState },

@@ -13,8 +13,18 @@ window.__ModuleLoader__.load({
     const PANEL_ID = 'travel-agent'
     const NS = 'travelAgent'
     const VIEW_ID = 'travel'
-    /** Must match TRIPS_DIR in index.js: the flight tools are offered only to Sessions in this directory. */
-    const TRIPS_DIR = '/Users/fsy/travel'
+    /**
+     * Comparable form of an absolute path from the Host: Windows paths (drive or UNC) compare without case and
+     * separator differences; trailing separators are ignored.
+     */
+    const pathKey = path => {
+      if (typeof path !== 'string') return undefined
+      if (/^[A-Za-z]:[\\/]|^\\\\/.test(path)) return path.replace(/\//g, '\\').replace(/\\+$/, '').toLowerCase()
+      return path.replace(/\/+$/, '') || '/'
+    }
+    const samePath = (a, b) => pathKey(a) !== undefined && pathKey(a) === pathKey(b)
+    /** Source for an absent synced field (a Host without `tripsDir`): always undefined. */
+    const NO_VALUE = { getSnapshot: () => undefined, subscribe: () => () => {} }
     const CSS = ".ta-board{container:ta-board/inline-size;box-sizing:border-box;width:100%;max-width:760px;margin:0 auto;padding:20px 24px 32px;display:flex;flex-direction:column;gap:20px;color:var(--dsw-alias-label-primary);font-size:13px;line-height:20px}\n.ta-board[hidden]{display:none}\n.ta-muted{color:var(--dsw-alias-label-secondary)}\n.ta-faint{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}\n.ta-p{margin:0}\n.ta-ellipsis{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n.ta-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap}\n.ta-icon{flex:none;display:block}\n.ta-card{border-radius:var(--dsw-radius-lg);border:0.5px solid var(--dsw-alias-settings-card-stroke);background:var(--dsw-alias-settings-card-fill)}\n.ta-section{display:flex;flex-direction:column;gap:10px}\n.ta-section-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}\n.ta-section-title{margin:0;font-size:14px;line-height:20px;font-weight:500}\n.ta-toolbar{display:flex;align-items:center;gap:12px;min-height:28px}\n.ta-toolbar-gap{flex:1}\n.ta-back{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 8px 0 4px;margin-left:-4px;border-radius:var(--dsw-radius-sm);color:var(--dsw-alias-label-secondary);font-size:13px;cursor:pointer}\n.ta-btn{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:var(--dsw-radius-sm);border:0.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-primary);font-size:12px;line-height:18px;white-space:nowrap;cursor:pointer}\n.ta-text-btn{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:var(--dsw-radius-sm);color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px;white-space:nowrap;cursor:pointer}\n.ta-disclosure{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:6px;min-width:0;height:28px;padding:0 6px;margin-left:-6px;border-radius:var(--dsw-radius-sm);color:var(--dsw-alias-label-secondary);font-size:13px;cursor:pointer}\n.ta-disclosure-icon{display:inline-flex;transition:transform 120ms ease}\n.ta-disclosure-icon[data-open=true]{transform:rotate(90deg)}\n.ta-folder-name{color:var(--dsw-alias-label-primary);font-weight:500}\n.ta-back:focus-visible,.ta-btn:focus-visible,.ta-text-btn:focus-visible,.ta-disclosure:focus-visible,.ta-opt:focus-visible,.ta-link:focus-visible,.ta-trip-open:focus-visible,.ta-send:focus-visible{outline:var(--dsw-focus-ring-width,2px) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:1px}\n@media (hover:hover){\n.ta-back:hover,.ta-disclosure:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}\n.ta-btn:hover{background:var(--dsw-alias-interactive-bg-hover)}\n.ta-text-btn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}\n.ta-opt:hover{background:var(--dsw-alias-interactive-bg-hover)}\n.ta-opt:hover .ta-opt-chev{color:var(--dsw-alias-label-secondary)}\n.ta-link:hover{text-decoration:underline dotted;text-underline-offset:3px}\n.ta-trip-open:hover{background:var(--dsw-alias-interactive-bg-hover)}\n.ta-send:hover:enabled{background:var(--dsw-alias-button-primary-hover)}\n}\n.ta-status{display:inline-flex;align-items:center;gap:6px;font-size:12px;line-height:18px;color:var(--dsw-alias-label-secondary);white-space:nowrap}\n.ta-status::before{content:'';width:6px;height:6px;border-radius:50%;corner-shape:round;background:var(--dsw-alias-state-business-primary);animation:ta-pulse 1.4s ease-in-out infinite}\n@keyframes ta-pulse{0%,100%{opacity:.35}50%{opacity:1}}\n@media (prefers-reduced-motion:reduce){.ta-status::before{animation:none}.ta-disclosure-icon{transition:none}}\n.ta-empty{margin:0;color:var(--dsw-alias-label-tertiary)}\n.ta-empty-state{display:flex;flex-direction:column;align-items:center;gap:12px;margin:64px auto;max-width:360px;text-align:center}\n.ta-empty-icon{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:var(--dsw-radius-md);background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 12%,transparent);color:var(--dsw-alias-state-business-primary)}\n.ta-error{font-size:12px;line-height:18px;color:var(--dsw-alias-state-error-primary)}\n.ta-folder{display:flex;flex-direction:column;gap:16px}\n.ta-trip-head{display:flex;flex-direction:column;gap:4px}\n.ta-trip-title{margin:0;font-size:20px;line-height:28px;font-weight:500}\n.ta-folder-body{display:flex;flex-direction:column;gap:20px}\n.ta-chips{display:flex;flex-wrap:wrap;gap:6px}\n.ta-chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;corner-shape:round;border:0.5px solid var(--dsw-alias-border-l2);font-size:12px;line-height:18px;color:var(--dsw-alias-label-secondary);white-space:nowrap}\n.ta-chip[data-state=done]{background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 10%,transparent);border-color:transparent;color:var(--dsw-alias-label-primary)}\n.ta-chip-dot{width:6px;height:6px;border-radius:50%;corner-shape:round;background:var(--dsw-alias-label-tertiary)}\n.ta-chip[data-state=blocked] .ta-chip-dot{background:var(--dsw-alias-state-warn-primary)}\n.ta-opts{display:flex;flex-direction:column;border-radius:var(--dsw-radius-lg);border:0.5px solid var(--dsw-alias-settings-card-stroke);background:var(--dsw-alias-settings-card-fill);overflow:hidden}\n.ta-opt{all:unset;box-sizing:border-box;display:grid;grid-template-columns:120px minmax(0,1fr) auto 14px;align-items:center;column-gap:16px;padding:12px 14px 12px 16px;cursor:pointer}\n.ta-opt+.ta-opt{border-top:0.5px solid var(--dsw-alias-border-l2)}\n.ta-opt-price{display:flex;flex-direction:column;align-items:flex-start;gap:4px}\n.ta-price{font-size:16px;line-height:24px;font-weight:500;font-variant-numeric:tabular-nums}\n.ta-tags{display:flex;flex-wrap:wrap;gap:4px}\n.ta-tag{display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:999px;corner-shape:round;font-size:11px;line-height:16px;color:var(--dsw-alias-state-business-primary);background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 12%,transparent);white-space:nowrap}\n.ta-tag[data-tag=leastLeave]{color:var(--dsw-alias-state-success-primary);background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 12%,transparent)}\n.ta-tag[data-tag=easiest]{color:var(--dsw-alias-state-warn-primary);background:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 12%,transparent)}\n.ta-opt-leave{display:flex;flex-direction:column;align-items:flex-end}\n.ta-opt-leave-n{font-size:16px;line-height:24px;font-weight:500;font-variant-numeric:tabular-nums}\n.ta-opt-chev{color:var(--dsw-alias-label-tertiary);display:inline-flex}\n.ta-hero{display:flex;flex-direction:column;gap:4px}\n.ta-hero-price{font-size:24px;line-height:32px;font-weight:500;font-variant-numeric:tabular-nums}\n.ta-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}\n.ta-stat{display:flex;flex-direction:column;gap:2px;padding:12px 16px}\n.ta-stat+.ta-stat{border-left:0.5px solid var(--dsw-alias-border-l2)}\n.ta-stat-value{font-size:16px;line-height:24px;font-weight:500;font-variant-numeric:tabular-nums}\n.ta-dir{display:flex;flex-direction:column;gap:12px;padding:14px 16px 16px}\n.ta-dir-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}\n.ta-tl{display:flex;flex-direction:column}\n.ta-tl-row{display:grid;grid-template-columns:44px 12px minmax(0,1fr);column-gap:10px;align-items:center}\n.ta-tl-time{font-size:14px;line-height:22px;font-weight:500;font-variant-numeric:tabular-nums}\n.ta-tl-dot{justify-self:center;width:7px;height:7px;border-radius:50%;corner-shape:round;border:1.5px solid var(--dsw-alias-label-secondary);box-sizing:border-box}\n.ta-tl-place{display:flex;align-items:baseline;gap:8px;font-size:14px;line-height:22px;font-weight:500}\n.ta-tl-flight,.ta-tl-layover{min-height:30px;align-items:stretch}\n.ta-tl-flight>:last-child,.ta-tl-layover>:last-child{align-self:center}\n.ta-tl-rail{justify-self:center;width:0;border-left:1.5px solid var(--dsw-alias-border-l3)}\n.ta-tl-layover .ta-tl-rail{border-left-style:dashed}\n.ta-tl-pill{justify-self:start;display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:var(--dsw-radius-sm);background:var(--dsw-alias-interactive-bg-hover);font-size:12px;line-height:18px;color:var(--dsw-alias-label-secondary)}\n.ta-list{display:flex;flex-direction:column;overflow:hidden}\n.ta-list-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px 10px 16px}\n.ta-list-row+.ta-list-row{border-top:0.5px solid var(--dsw-alias-border-l2)}\n.ta-quote-main{display:flex;flex-direction:column;gap:2px;min-width:0}\n.ta-quote-price{font-size:14px;line-height:20px;font-weight:500;font-variant-numeric:tabular-nums}\n.ta-link{display:inline-flex;align-items:center;gap:4px;color:var(--dsw-alias-link);font-weight:500;text-decoration:none;white-space:nowrap;border-radius:4px}\n.ta-home{container:ta-home/inline-size;height:100%;min-height:0;display:flex;flex-direction:column;color:var(--dsw-alias-label-primary);font-size:13px;line-height:20px;--ta-inset:clamp(20px,4vw,48px)}\n.ta-home-scroll{flex:1;min-height:0;overflow-y:auto;padding:0 var(--ta-inset)}\n.ta-home-col{box-sizing:border-box;width:100%;max-width:960px;margin:0 auto;padding:28px 0 24px;display:flex;flex-direction:column;gap:24px}\n.ta-home-head{display:flex;flex-direction:column;gap:4px}\n.ta-page-title{margin:0;font-size:20px;line-height:28px;font-weight:500}\n.ta-trip-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}\n.ta-trip-card{position:relative;display:flex;flex-direction:column;gap:14px;padding:14px 12px 14px 16px;border-radius:var(--dsw-radius-xl);border:0.5px solid var(--dsw-alias-settings-card-stroke);background:var(--dsw-alias-settings-card-fill);min-width:0}\n.ta-trip-card[data-archived]{opacity:.72}\n.ta-trip-open{all:unset;position:absolute;inset:0;border-radius:inherit;cursor:pointer}\n.ta-trip-open:disabled{cursor:default}\n.ta-trip-card-head{display:flex;align-items:center;gap:12px;min-width:0;pointer-events:none}\n.ta-trip-icon{flex:none;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:var(--dsw-radius-md);background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 12%,transparent);color:var(--dsw-alias-state-business-primary)}\n.ta-trip-card-text{flex:1;min-width:0;display:flex;flex-direction:column}\n.ta-trip-card-title{font-size:14px;line-height:20px;font-weight:500}\n.ta-trip-actions{position:relative;z-index:1;align-self:flex-start;pointer-events:auto}\n.ta-trip-facts{display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;pointer-events:none}\n.ta-fact{display:flex;flex-direction:column}\n.ta-fact-value{font-size:14px;line-height:20px;font-weight:500;font-variant-numeric:tabular-nums}\n.ta-trip-facts .ta-status{margin-left:auto}\n@media (hover:hover){.ta-trip-card .ta-trip-actions{opacity:0;transition:opacity 120ms ease}.ta-trip-card:hover .ta-trip-actions,.ta-trip-card:focus-within .ta-trip-actions,.ta-trip-card[data-archived] .ta-trip-actions{opacity:1}}\n.ta-home-composer{flex:none;box-sizing:border-box;width:100%;max-width:calc(760px + 2 * var(--ta-inset));margin:0 auto;padding:8px var(--ta-inset) 20px;display:flex;flex-direction:column;gap:6px}\n.ta-input{display:flex;flex-direction:column;gap:4px;padding:12px 12px 10px 16px;border:0;border-radius:var(--dsw-radius-panel);background:var(--dsw-specific-input-major);box-shadow:var(--dsw-elevation-soft);--dsw-elevation-stroke-color:var(--dsw-alias-border-l2)}\n.ta-input:focus-within{--dsw-elevation-stroke-color:var(--dsw-alias-border-l4)}\n.ta-input textarea{resize:none;border:0;outline:none;background:transparent;font:inherit;font-size:14px;line-height:24px;color:inherit;max-height:160px;padding:0}\n.ta-input textarea::placeholder{color:var(--dsw-alias-label-tertiary)}\n.ta-input-bar{display:flex;align-items:center;justify-content:space-between;gap:12px}\n.ta-send{all:unset;box-sizing:border-box;flex:none;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;corner-shape:round;background:var(--dsw-alias-button-primary-fill);color:var(--dsw-alias-label-primary-inverted);cursor:pointer}\n.ta-send:disabled{background:var(--dsw-alias-button-primary-dimmed);cursor:default}\n.ta-suggests{display:flex;flex-wrap:wrap;gap:8px;padding:0 4px}\n.ta-suggest{all:unset;box-sizing:border-box;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;height:28px;padding:0 12px;border-radius:999px;corner-shape:round;border:0.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-secondary);font-size:12px;line-height:28px;cursor:pointer}\n.ta-suggest:focus-visible{outline:var(--dsw-focus-ring-width,2px) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:1px}\n@media (hover:hover){.ta-suggest:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}}\n.ta-opt-legs{display:grid;grid-template-columns:28px 136px 12px 150px minmax(0,1fr);align-items:baseline;column-gap:8px;row-gap:6px;min-width:0;font-size:13px;line-height:20px}\n.ta-journey{display:contents}\n.ta-journey-label{color:var(--dsw-alias-label-tertiary);font-size:12px}\n.ta-j-point{white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-secondary)}\n.ta-j-point b{font-weight:500;color:var(--dsw-alias-label-primary)}\n.ta-j-date{color:var(--dsw-alias-label-secondary)}\n.ta-j-code{color:var(--dsw-alias-label-tertiary)}\n.ta-journey-arrow{color:var(--dsw-alias-label-tertiary)}\n.ta-journey-meta{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary);font-size:12px}\n.ta-j-home{display:inline-flex;align-items:baseline;gap:4px;white-space:nowrap;font-variant-numeric:tabular-nums}\n.ta-j-home b,.ta-j-home .ta-j-date{color:var(--dsw-alias-state-success-primary);font-weight:500}\n.ta-j-home-label{display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:999px;corner-shape:round;font-size:11px;line-height:16px;font-weight:500;color:var(--dsw-alias-state-success-primary);background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 12%,transparent);align-self:center}\n.ta-tag[data-tag=alt]{color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-interactive-bg-hover)}\n.ta-hero-trip{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px;font-size:14px;line-height:22px;font-variant-numeric:tabular-nums}\n.ta-hero-trip b{font-weight:500}\n.ta-tl-home .ta-tl-time,.ta-tl-home .ta-tl-place{color:var(--dsw-alias-state-success-primary)}\n.ta-tl-home .ta-tl-dot{border-color:var(--dsw-alias-state-success-primary);background:var(--dsw-alias-state-success-primary)}\n.ta-tl-home-date{font-size:12px;line-height:18px;font-weight:400}\n@container ta-board (max-width:560px){\n.ta-opt{grid-template-columns:minmax(0,1fr) auto 14px;row-gap:8px}\n.ta-opt-price{grid-column:1;flex-direction:row;align-items:center;flex-wrap:wrap}\n.ta-opt-legs{grid-column:1/-1;grid-row:2;grid-template-columns:28px auto 12px auto}\n.ta-opt-leave{grid-column:2;grid-row:1}\n.ta-opt-chev{grid-column:3;grid-row:1}\n.ta-journey-meta{display:none}\n}"
 
     const zh = {
@@ -37,6 +47,7 @@ window.__ModuleLoader__.load({
       'home.failed': '操作失败：{reason}',
       'home.untitled': '未命名行程',
       'home.noTrip': '助手正在整理行程…',
+      'home.noDir': '没有拿到旅行目录，请在插件管理里重新启用旅行助手',
       'home.created': '已新建行程卡片，助手在后台查询',
       'home.lowest': '最低 {price}',
       'home.leastLeave': '最少请假 {n} 天',
@@ -114,6 +125,7 @@ window.__ModuleLoader__.load({
       'home.failed': 'Could not complete: {reason}',
       'home.untitled': 'Untitled trip',
       'home.noTrip': 'The assistant is setting up the trip…',
+      'home.noDir': 'The trips directory is unavailable; re-enable Travel agent in Plugins',
       'home.created': 'Trip card created; the assistant is searching in the background',
       'home.lowest': 'from {price}',
       'home.leastLeave': 'least leave {n} d',
@@ -410,11 +422,12 @@ window.__ModuleLoader__.load({
     }
 
     /** The 机票方案 Conversation view: this Session's trip folder, a way back to the travel home, and the activity side panel. */
-    function TravelView({ sessionId, useProjection, useSession, useSessions, useArchived, t, openActivity, openHome, setArchived }) {
+    function TravelView({ sessionId, useProjection, useSession, useSessions, useArchived, useTripsDir, t, openActivity, openHome, setArchived }) {
       const board = useProjection('flightBoard')
       const running = useSession(snapshot => snapshot.running === true)
       const archivedIds = useArchived(map => map[sessionId] ?? NONE)
       const cwd = useSessions(state => state.byId[sessionId]?.cwd)
+      const tripsDir = useTripsDir(value => value)
       const [selected, setSelected] = useState(null)
       const [open, setOpen] = useState(() => new Set())
       const listRef = useRef(null)
@@ -427,7 +440,7 @@ window.__ModuleLoader__.load({
       }, [selected])
       const style = h('style', null, CSS)
       // Other Sessions show their own folders when they have any (older test Sessions); otherwise point to the travel agent.
-      if (cwd !== undefined && cwd !== TRIPS_DIR && (board?.trips.length ?? 0) === 0) {
+      if (cwd !== undefined && tripsDir !== undefined && !samePath(cwd, tripsDir) && (board?.trips.length ?? 0) === 0) {
         return h('div', { className: 'ta-board' }, style,
           h('div', { className: 'ta-empty-state' }, h('span', { className: 'ta-empty-icon' }, h(PlaneIcon, { size: 20 })),
             h('p', { className: 'ta-muted ta-p' }, t('other.hint')),
@@ -485,10 +498,10 @@ window.__ModuleLoader__.load({
     }
 
     /**
-     * The travel home page: every Session in TRIPS_DIR is one trip folder; sending a message starts a new Session, which
+     * The travel home page: every Session in the trips directory (Config `tripsDir`) is one trip folder; sending a message starts a new Session, which
      * becomes a new folder. Archiving a folder archives its Session through the Workspace, so it leaves the Session list too.
      */
-    function TravelHome({ useSessions, useWorkspaces, t, startTrip, openTrip, archiveTrip, restoreTrip }) {
+    function TravelHome({ useSessions, useWorkspaces, useTripsDir, t, startTrip, openTrip, archiveTrip, restoreTrip }) {
       const sessions = useSessions(state => state.byId)
       const workspaces = useWorkspaces(state => state)
       const [draft, setDraft] = useState('')
@@ -503,7 +516,8 @@ window.__ModuleLoader__.load({
         const timer = setTimeout(() => setJustCreated(false), 4000)
         return () => clearTimeout(timer)
       }, [justCreated])
-      const workspace = workspaces.items.find(item => item.path === TRIPS_DIR)
+      const tripsDir = useTripsDir(value => value)
+      const workspace = workspaces.items.find(item => samePath(item.path, tripsDir))
       const archivedSet = new Set(workspaces.archivedSessionIds)
       const entries = (workspace?.sessionIds ?? [])
         .map(id => sessions[id] === undefined ? undefined : { ...sessions[id], id })
@@ -614,18 +628,25 @@ window.__ModuleLoader__.load({
 
     return {
       inject: ['slots', 'locale', 'remote', 'remote.session', 'workspaces', 'uiWorkspace', 'sidebarRight', 'layout'],
-      apply(ctx) {
+      /**
+       * @param ctx - Client plugin context.
+       * @param config - synced Host Config; `tripsDir` is the absolute trips directory, or undefined from a Host without it.
+       */
+      apply(ctx, config) {
+        const tripsDirRef = config?.tripsDir ?? { get: () => undefined, ...NO_VALUE }
         const t = ctx.locale.bind(NS)
         ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'travel-agent: copy')
         const archived = archiveStore()
         const openHome = () => { ctx.layout.selectPanel(PANEL_ID) }
         const openTrip = sessionId => { seedView(sessionId); ctx.uiWorkspace.openSession(sessionId) }
         /**
-         * A home-page message becomes the first message of a new Session in TRIPS_DIR, which is a new trip card. The
+         * A home-page message becomes the first message of a new Session in the trips directory, which is a new trip card. The
          * user stays on the home page; the Session runs in the background and opens on 机票方案 when clicked.
          */
         const startTrip = async (text) => {
-          const workspace = await ctx.workspaces.create({ path: TRIPS_DIR })
+          const dir = tripsDirRef.get()
+          if (typeof dir !== 'string') throw new Error(t('home.noDir'))
+          const workspace = await ctx.workspaces.create({ path: dir })
           const sessionId = await ctx.uiWorkspace.connectWorkspace(workspace.workspaceId)
           seedView(sessionId)
           const result = await ctx.remote.session.prompt({
@@ -642,7 +663,7 @@ window.__ModuleLoader__.load({
         }
         ctx.effect(() => ctx.slots.inject('conversation.view', () => ctx.slots.register({
           name: 'conversation.view', id: VIEW_ID, order: 20, locale: NS, label: () => t('view.label'),
-          inject: () => ({ openActivity, openHome, setArchived: archived.set, hooks: { archived: archived.source } }),
+          inject: () => ({ openActivity, openHome, setArchived: archived.set, hooks: { archived: archived.source, tripsDir: tripsDirRef } }),
         }, TravelView)), 'travel-agent: conversation view')
         ctx.effect(() => ctx.slots.inject('main', () => ctx.slots.register({
           name: 'main', key: PANEL_ID, locale: NS,
@@ -650,6 +671,7 @@ window.__ModuleLoader__.load({
             startTrip, openTrip,
             archiveTrip: sessionId => ctx.workspaces.archiveSession(sessionId),
             restoreTrip: sessionId => ctx.workspaces.unarchiveSession(sessionId),
+            hooks: { tripsDir: tripsDirRef },
           }),
         }, TravelHome)), 'travel-agent: home page')
         ctx.effect(() => ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({
