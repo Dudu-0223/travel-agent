@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Travel agent",
+    "description": "Travel agent in the left sidebar: one card per trip; one message starts a trip and the assistant researches flights in the background. Each trip's Flights view shows recommended options ranked by price, leave days and transfers, the time you get home, and prices from each site; the assistant asks with question cards when it needs your choice.",
+    "detail": "docs/DETAIL.md"
+  }
+}
